@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom PNGTuber</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #00ff00; /* Green screen default */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: sans-serif;
+      overflow: hidden;
+    }
+    #ui-panel {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    #avatar-container {
+      position: relative;
+    }
+    #avatar {
+      max-height: 80vh;
+      max-width: 80vw;
+      object-fit: contain;
+      transition: transform 0.1s;
+    }
+    .talking {
+      transform: scale(1.05); /* Slight bounce when talking */
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .hidden {
+      display: none !important;
+    }
+    button {
+      background-color: #333;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="ui-panel">
+    <h3>PNGTuber Setup</h3>
+    
+    <label>Idle Image:</label>
+    <input type="file" id="idle-upload" accept="image/png, image/jpeg, image/gif">
+    
+    <label>Talking Image:</label>
+    <input type="file" id="talk-upload" accept="image/png, image/jpeg, image/gif">
+    
+    <label>Background Color:</label>
+    <input type="color" id="bg-color" value="#00ff00">
+    
+    <label>Mic Sensitivity:</label>
+    <input type="range" id="sensitivity" min="1" max="100" value="10">
+    
+    <button id="start-btn" style="margin-top:15px; padding: 10px; cursor: pointer; width: 100%;">Start Microphone</button>
+    <button id="hide-ui-btn" style="margin-top:10px; padding: 10px; cursor: pointer; width: 100%;">Hide Setup Menu</button>
+    
+  </div>
+
+  <div id="avatar-container">
+    <img id="avatar" src="" alt="Upload your images top left!">
+  </div>
+
+  <script>
+    const uiPanel = document.getElementById('ui-panel');
+    const idleUpload = document.getElementById('idle-upload');
+    const talkUpload = document.getElementById('talk-upload');
+    const bgColor = document.getElementById('bg-color');
+    const sensitivitySlider = document.getElementById('sensitivity');
+    const startBtn = document.getElementById('start-btn');
+    const hideUiBtn = document.getElementById('hide-ui-btn');
+    const avatar = document.getElementById('avatar');
+
+    let idleSrc = '';
+    let talkSrc = '';
+    let isTalking = false;
+    let audioContext;
+    let microphone;
+    let analyser;
+
+    // Handle Image Uploads 
+    idleUpload.addEventListener('change', (e) => {
+      if(e.target.files[0]) {
+        idleSrc = URL.createObjectURL(e.target.files[0]);
+        if(!isTalking) avatar.src = idleSrc;
+      }
+    });
+
+    talkUpload.addEventListener('change', (e) => {
+      if(e.target.files[0]) {
+        talkSrc = URL.createObjectURL(e.target.files[0]);
+      }
+    });
+
+    // Handle Background Color
+    bgColor.addEventListener('input', (e) => {
+      document.body.style.backgroundColor = e.target.value;
+    });
+
+    // Hide UI for OBS capture
+    hideUiBtn.addEventListener('click', () => {
+      uiPanel.classList.add('hidden');
+    });
+
+    // Microphone setup
+    startBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        
+        startBtn.textContent = "Mic is Active";
+        startBtn.disabled = true;
+        startBtn.style.backgroundColor = "#28a745";
+        
+        checkAudioLevel();
+      } catch (err) {
+        alert('Microphone access denied.');
+        console.error(err);
+      }
+    });
+
+    function checkAudioLevel() {
+      if (!analyser) return;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+      
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      let average = sum / dataArray.length;
+      
+      // Map slider so higher value = more sensitive (triggers easier)
+      const threshold = 100 - sensitivitySlider.value; 
+      
+      if (average > threshold) {
+        if (!isTalking && talkSrc) {
+          isTalking = true;
+          avatar.src = talkSrc;
+          avatar.classList.add('talking');
+        }
+      } else {
+        if (isTalking && idleSrc) {
+          isTalking = false;
+          avatar.src = idleSrc;
+          avatar.classList.remove('talking');
+        }
+      }
+      
+      requestAnimationFrame(checkAudioLevel);
+    }
+  </script>
+</body>
+</html> 
