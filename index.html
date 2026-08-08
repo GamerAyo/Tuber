@@ -26,7 +26,6 @@
       overflow: hidden;
     }
 
-    /* Premium Glassmorphism UI */
     #ui-panel {
       background: var(--bg-dark);
       backdrop-filter: blur(12px);
@@ -100,35 +99,11 @@
       cursor: pointer;
     }
 
-    select {
-      font-size: 13px;
-      color: #fff;
-    }
+    select { font-size: 13px; color: #fff; }
+    input[type="color"] { width: 100%; height: 35px; border: none; border-radius: 6px; background: none; cursor: pointer; margin-top: 5px; }
+    input[type="range"] { width: 100%; margin-top: 8px; accent-color: var(--accent); }
+    input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
 
-    input[type="color"] {
-      width: 100%;
-      height: 35px;
-      border: none;
-      border-radius: 6px;
-      background: none;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      margin-top: 8px;
-      accent-color: var(--accent);
-    }
-    
-    input[type="checkbox"] {
-      accent-color: var(--accent);
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    /* Live Audio Meter */
     #meter-container {
       width: 100%;
       height: 12px;
@@ -176,7 +151,6 @@
     #clear-data-btn:hover { background-color: #ff4444; color: #fff; }
     .hidden { opacity: 0; pointer-events: none; }
 
-    /* Avatar Settings & Dragging */
     #avatar-container {
       position: absolute;
       cursor: grab;
@@ -186,9 +160,7 @@
     }
     #avatar-container:active { cursor: grabbing; }
     
-    #flip-wrapper {
-      transition: transform 0.2s;
-    }
+    #flip-wrapper { transition: transform 0.2s; }
 
     #avatar {
       height: 85vh; 
@@ -198,8 +170,6 @@
       transition: height 0.1s;
     }
 
-    /* --- CUSTOM ANIMATIONS --- */
-    
     @keyframes shake {
       0% { transform: translate(1px, 1px) rotate(0deg); }
       25% { transform: translate(-2px, -3px) rotate(-1.5deg); }
@@ -228,7 +198,6 @@
     .anim-idle-float { animation: float 3s infinite ease-in-out; }
     
     .anim-none { animation: none; }
-
   </style>
 </head>
 <body>
@@ -274,6 +243,8 @@
     <input type="file" id="bg-image" accept="image/*">
 
     <div class="section-title">4. Microphone Settings</div>
+    <label id="mic-status" style="color: #00ff88; font-weight: bold; margin-bottom: 5px;">Status: Connecting Mic...</label>
+    
     <label>Mic Boost (Gain):</label>
     <input type="range" id="mic-boost" min="10" max="50" value="10">
     
@@ -283,7 +254,6 @@
     <label>Live Mic Level:</label>
     <div id="meter-container"><div id="audio-meter"></div></div>
     
-    <button id="start-btn">Connect Microphone</button>
     <button id="hide-ui-btn">Hide Menu (OBS Mode)</button>
     <p style="font-size: 11px; color: #888; text-align: center; margin-bottom: 0;">Refresh page to bring menu back.</p>
     
@@ -308,7 +278,7 @@
     const flipCheckbox = document.getElementById('flip-avatar');
     const animSelect = document.getElementById('anim-style');
     const idleAnimSelect = document.getElementById('idle-anim-style');
-    const startBtn = document.getElementById('start-btn');
+    const micStatus = document.getElementById('mic-status');
     const hideUiBtn = document.getElementById('hide-ui-btn');
     const audioMeter = document.getElementById('audio-meter');
 
@@ -321,7 +291,6 @@
     let isBlinking = false;
     let audioContext, analyser;
     
-    // --- LOAD SAVED DATA ---
     function loadSavedData() {
       updateAvatarImage();
       
@@ -355,7 +324,6 @@
       }
     }
 
-    // --- UPLOADS ---
     function handleUploadWithSave(inputId, storageKey, callback) {
       document.getElementById(inputId).addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -382,7 +350,6 @@
     handleUploadWithSave('img-talk-blink', 'png_talkBlink', (url) => { srcTalkBlink = url; updateAvatarImage(); });
     handleUploadWithSave('bg-image', 'png_bgImage', (url) => { document.body.style.backgroundImage = `url(${url})`; });
 
-    // --- UI EVENT LISTENERS ---
     bgInput.addEventListener('input', (e) => {
       document.body.style.backgroundImage = 'none';
       localStorage.removeItem('png_bgImage');
@@ -418,7 +385,6 @@
       if (confirm("Reset everything?")) { localStorage.clear(); location.reload(); }
     });
 
-    // --- DRAG LOGIC ---
     let isDragging = false;
     let currentX = 0, currentY = 0, initialX = 0, initialY = 0, xOffset = 0, yOffset = 0;
 
@@ -444,7 +410,6 @@
       }
     }
 
-    // --- AVATAR STATE CONTROLLER ---
     function updateAvatarImage() {
       avatar.className = '';
       const talkAnim = animSelect.value;
@@ -470,8 +435,8 @@
     }
     setTimeout(blinkLoop, 2000);
 
-    // --- MICROPHONE LOGIC ---
-    startBtn.addEventListener('click', async () => {
+    // --- AUTO-CONNECT MICROPHONE ON LOAD FOR OBS ---
+    async function initMic() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -482,15 +447,16 @@
         const microphone = audioContext.createMediaStreamSource(stream);
         microphone.connect(analyser);
         
-        startBtn.textContent = "Microphone Connected";
-        startBtn.style.backgroundColor = "#28a745";
-        startBtn.disabled = true;
+        micStatus.textContent = "Status: Microphone Connected!";
+        micStatus.style.color = "#28a745";
         
         checkAudioLevel();
       } catch (err) {
-        alert('Could not access microphone! Allow permissions.');
+        micStatus.textContent = "Status: Mic Blocked! Click 'Interact' in OBS.";
+        micStatus.style.color = "#ff4444";
+        console.error(err);
       }
-    });
+    }
 
     function checkAudioLevel() {
       if (!analyser) return;
@@ -500,7 +466,6 @@
       let sum = 0;
       for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
       
-      // Apply Mic Boost (Value goes from 10 to 50, which translates to 1.0x to 5.0x boost)
       const boostMultiplier = boostSlider.value / 10;
       let average = (sum / dataArray.length) * boostMultiplier;
       
@@ -518,6 +483,7 @@
     }
 
     loadSavedData();
+    initMic(); // Automatically boots up mic detection when loaded in OBS
   </script>
 </body>
 </html>
