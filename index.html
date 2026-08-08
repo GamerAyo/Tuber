@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Custom PNGTuber</title>
+  <title>Advanced Custom PNGTuber</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #00ff00; /* Green screen default */
+      background-color: #00ff00; /* Green screen */
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -25,6 +25,9 @@
       left: 20px;
       z-index: 10;
       box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      max-width: 300px;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     #avatar-container {
       position: relative;
@@ -33,15 +36,22 @@
       max-height: 80vh;
       max-width: 80vw;
       object-fit: contain;
-      transition: transform 0.1s;
+      transition: transform 0.05s;
     }
+    /* The bounce effect when talking */
     .talking {
-      transform: scale(1.05); /* Slight bounce when talking */
+      transform: scale(1.05) translateY(-10px); 
     }
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 15px;
+      font-size: 14px;
       font-weight: bold;
+      color: #333;
+    }
+    input[type="file"] {
+      margin-top: 5px;
+      font-size: 12px;
     }
     .hidden {
       display: none !important;
@@ -52,72 +62,134 @@
       border: none;
       border-radius: 5px;
       font-weight: bold;
+      margin-top: 15px;
+      padding: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+    hr {
+      margin-top: 15px;
+      border: 0;
+      border-top: 1px solid #ccc;
     }
   </style>
 </head>
 <body>
 
   <div id="ui-panel">
-    <h3>PNGTuber Setup</h3>
+    <h3 style="margin-top:0;">PNGTuber Setup</h3>
     
-    <label>Idle Image:</label>
-    <input type="file" id="idle-upload" accept="image/png, image/jpeg, image/gif">
+    <label>1. Closed Mouth, Open Eyes (Idle)</label>
+    <input type="file" id="img-idle" accept="image/png, image/jpeg, image/gif">
     
-    <label>Talking Image:</label>
-    <input type="file" id="talk-upload" accept="image/png, image/jpeg, image/gif">
+    <label>2. Closed Mouth, Closed Eyes (Blink)</label>
+    <input type="file" id="img-blink" accept="image/png, image/jpeg, image/gif">
     
+    <label>3. Open Mouth, Open Eyes (Talk)</label>
+    <input type="file" id="img-talk" accept="image/png, image/jpeg, image/gif">
+    
+    <label>4. Open Mouth, Closed Eyes (Talk + Blink)</label>
+    <input type="file" id="img-talk-blink" accept="image/png, image/jpeg, image/gif">
+    
+    <hr>
+
     <label>Background Color:</label>
     <input type="color" id="bg-color" value="#00ff00">
     
     <label>Mic Sensitivity:</label>
     <input type="range" id="sensitivity" min="1" max="100" value="10">
     
-    <button id="start-btn" style="margin-top:15px; padding: 10px; cursor: pointer; width: 100%;">Start Microphone</button>
-    <button id="hide-ui-btn" style="margin-top:10px; padding: 10px; cursor: pointer; width: 100%;">Hide Setup Menu</button>
-    
+    <button id="start-btn">Start Microphone</button>
+    <button id="hide-ui-btn">Hide Setup Menu</button>
+    <p style="font-size: 12px; color: #666; margin-bottom: 0;">Refresh page to bring menu back.</p>
   </div>
 
   <div id="avatar-container">
-    <img id="avatar" src="" alt="Upload your images top left!">
+    <img id="avatar" src="" alt="Upload your 4 images in the top left!">
   </div>
 
   <script>
     const uiPanel = document.getElementById('ui-panel');
-    const idleUpload = document.getElementById('idle-upload');
-    const talkUpload = document.getElementById('talk-upload');
-    const bgColor = document.getElementById('bg-color');
+    const bgInput = document.getElementById('bg-color');
     const sensitivitySlider = document.getElementById('sensitivity');
     const startBtn = document.getElementById('start-btn');
     const hideUiBtn = document.getElementById('hide-ui-btn');
     const avatar = document.getElementById('avatar');
 
-    let idleSrc = '';
-    let talkSrc = '';
+    // Image variables
+    let srcIdle = '';
+    let srcBlink = '';
+    let srcTalk = '';
+    let srcTalkBlink = '';
+
+    // State variables
     let isTalking = false;
+    let isBlinking = false;
+    
     let audioContext;
-    let microphone;
     let analyser;
 
-    // Handle Image Uploads 
-    idleUpload.addEventListener('change', (e) => {
-      if(e.target.files[0]) {
-        idleSrc = URL.createObjectURL(e.target.files[0]);
-        if(!isTalking) avatar.src = idleSrc;
-      }
-    });
+    // Helper to load image inputs
+    function handleUpload(inputId, callback) {
+      document.getElementById(inputId).addEventListener('change', (e) => {
+        if(e.target.files[0]) {
+          const url = URL.createObjectURL(e.target.files[0]);
+          callback(url);
+        }
+      });
+    }
 
-    talkUpload.addEventListener('change', (e) => {
-      if(e.target.files[0]) {
-        talkSrc = URL.createObjectURL(e.target.files[0]);
-      }
-    });
+    handleUpload('img-idle', (url) => { srcIdle = url; updateAvatarImage(); });
+    handleUpload('img-blink', (url) => { srcBlink = url; updateAvatarImage(); });
+    handleUpload('img-talk', (url) => { srcTalk = url; updateAvatarImage(); });
+    handleUpload('img-talk-blink', (url) => { srcTalkBlink = url; updateAvatarImage(); });
 
-    // Handle Background Color
-    bgColor.addEventListener('input', (e) => {
+    // Core function to decide which image to show
+    function updateAvatarImage() {
+      // Prioritize the correct state, fallback to idle if an image is missing
+      if (isTalking) {
+        if (isBlinking && srcTalkBlink) {
+          avatar.src = srcTalkBlink;
+        } else if (srcTalk) {
+          avatar.src = srcTalk;
+        } else {
+          avatar.src = srcIdle; 
+        }
+        avatar.classList.add('talking');
+      } else {
+        if (isBlinking && srcBlink) {
+          avatar.src = srcBlink;
+        } else {
+          avatar.src = srcIdle;
+        }
+        avatar.classList.remove('talking');
+      }
+    }
+
+    // Random Blinking Logic
+    function blinkLoop() {
+      isBlinking = true;
+      updateAvatarImage();
+      
+      // Keep eyes closed for 150 milliseconds
+      setTimeout(() => {
+        isBlinking = false;
+        updateAvatarImage();
+        
+        // Wait between 2 to 5 seconds before the next blink
+        const timeUntilNextBlink = Math.random() * 3000 + 2000;
+        setTimeout(blinkLoop, timeUntilNextBlink);
+      }, 150);
+    }
+    
+    // Start the blinking timer right away
+    setTimeout(blinkLoop, 2000);
+
+    // Background and UI controls
+    bgInput.addEventListener('input', (e) => {
       document.body.style.backgroundColor = e.target.value;
     });
 
-    // Hide UI for OBS capture
     hideUiBtn.addEventListener('click', () => {
       uiPanel.classList.add('hidden');
     });
@@ -130,7 +202,7 @@
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         
-        microphone = audioContext.createMediaStreamSource(stream);
+        const microphone = audioContext.createMediaStreamSource(stream);
         microphone.connect(analyser);
         
         startBtn.textContent = "Mic is Active";
@@ -139,11 +211,12 @@
         
         checkAudioLevel();
       } catch (err) {
-        alert('Microphone access denied.');
+        alert('Microphone access denied. Please allow mic permissions in your browser/OBS.');
         console.error(err);
       }
     });
 
+    // Audio level loop
     function checkAudioLevel() {
       if (!analyser) return;
       
@@ -156,25 +229,18 @@
       }
       let average = sum / dataArray.length;
       
-      // Map slider so higher value = more sensitive (triggers easier)
+      // Threshold for when the mic picks up talking
       const threshold = 100 - sensitivitySlider.value; 
+      const currentlyTalking = average > threshold;
       
-      if (average > threshold) {
-        if (!isTalking && talkSrc) {
-          isTalking = true;
-          avatar.src = talkSrc;
-          avatar.classList.add('talking');
-        }
-      } else {
-        if (isTalking && idleSrc) {
-          isTalking = false;
-          avatar.src = idleSrc;
-          avatar.classList.remove('talking');
-        }
+      // Only update if the state actually changes (prevents flickering)
+      if (currentlyTalking !== isTalking) {
+        isTalking = currentlyTalking;
+        updateAvatarImage();
       }
       
       requestAnimationFrame(checkAudioLevel);
     }
   </script>
 </body>
-</html> 
+</html>
