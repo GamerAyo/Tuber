@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ultimate PNGTuber Pro</title>
+  <title>Ultimate PNGTuber Pro - Mega Edition</title>
   <style>
     :root {
       --accent: #7289DA;
       --accent-hover: #5b6eae;
       --bg-dark: rgba(20, 20, 25, 0.85);
+      --avatar-shadow: 0px 15px 25px rgba(0,0,0,0.4);
     }
     
     body {
@@ -26,7 +27,6 @@
       overflow: hidden;
     }
 
-    /* Premium Glassmorphism UI */
     #ui-panel {
       background: var(--bg-dark);
       backdrop-filter: blur(12px);
@@ -100,35 +100,11 @@
       cursor: pointer;
     }
 
-    select {
-      font-size: 13px;
-      color: #fff;
-    }
+    select { font-size: 13px; color: #fff; }
+    input[type="color"] { width: 100%; height: 35px; border: none; border-radius: 6px; background: none; cursor: pointer; margin-top: 5px; }
+    input[type="range"] { width: 100%; margin-top: 8px; accent-color: var(--accent); }
+    input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; }
 
-    input[type="color"] {
-      width: 100%;
-      height: 35px;
-      border: none;
-      border-radius: 6px;
-      background: none;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      margin-top: 8px;
-      accent-color: var(--accent);
-    }
-    
-    input[type="checkbox"] {
-      accent-color: var(--accent);
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    /* Live Audio Meter */
     #meter-container {
       width: 100%;
       height: 12px;
@@ -176,7 +152,6 @@
     #clear-data-btn:hover { background-color: #ff4444; color: #fff; }
     .hidden { opacity: 0; pointer-events: none; }
 
-    /* Avatar Settings & Dragging */
     #avatar-container {
       position: absolute;
       cursor: grab;
@@ -186,20 +161,17 @@
     }
     #avatar-container:active { cursor: grabbing; }
     
-    #flip-wrapper {
-      transition: transform 0.2s;
-    }
+    #flip-wrapper { transition: transform 0.2s; }
 
     #avatar {
       height: 85vh; 
       object-fit: contain;
-      filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.4));
+      filter: var(--avatar-shadow);
       pointer-events: none; 
       transition: height 0.1s;
     }
 
-    /* --- CUSTOM ANIMATIONS --- */
-    
+    /* --- ANIMATIONS --- */
     @keyframes shake {
       0% { transform: translate(1px, 1px) rotate(0deg); }
       25% { transform: translate(-2px, -3px) rotate(-1.5deg); }
@@ -221,6 +193,12 @@
     }
     .anim-pulse { animation: pulse 0.25s infinite ease-in-out; }
 
+    @keyframes tilt {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(5deg) scale(1.02); }
+    }
+    .anim-tilt { animation: tilt 0.3s infinite ease-in-out; }
+
     @keyframes float {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
@@ -228,7 +206,6 @@
     .anim-idle-float { animation: float 3s infinite ease-in-out; }
     
     .anim-none { animation: none; }
-
   </style>
 </head>
 <body>
@@ -252,6 +229,7 @@
       <option value="anim-shake">Fast Shake (Default)</option>
       <option value="anim-bounce">Smooth Bounce</option>
       <option value="anim-pulse">Pulse / Expand</option>
+      <option value="anim-tilt">Side Tilt</option>
     </select>
     
     <label>Idle Floating:</label>
@@ -262,6 +240,12 @@
 
     <label>Avatar Size:</label>
     <input type="range" id="avatar-size" min="20" max="150" value="85">
+
+    <label>Glow / Shadow Color:</label>
+    <input type="color" id="shadow-color" value="#000000">
+
+    <label>Glow Blur Strength:</label>
+    <input type="range" id="shadow-blur" min="0" max="50" value="25">
     
     <label class="checkbox-label">
       <input type="checkbox" id="flip-avatar"> Flip Avatar Horizontally
@@ -270,6 +254,8 @@
     <div class="section-title">3. Environment</div>
     <label>Background Color (Green Screen)</label>
     <input type="color" id="bg-color" value="#00ff00">
+    <label>Background Opacity:</label>
+    <input type="range" id="bg-opacity" min="0" max="100" value="100">
     <label>OR Background Image</label>
     <input type="file" id="bg-image" accept="image/*">
 
@@ -302,9 +288,12 @@
     const avatarContainer = document.getElementById('avatar-container');
     const flipWrapper = document.getElementById('flip-wrapper');
     const bgInput = document.getElementById('bg-color');
+    const bgOpacitySlider = document.getElementById('bg-opacity');
     const sensitivitySlider = document.getElementById('sensitivity');
     const boostSlider = document.getElementById('mic-boost');
     const sizeSlider = document.getElementById('avatar-size');
+    const shadowColorInput = document.getElementById('shadow-color');
+    const shadowBlurSlider = document.getElementById('shadow-blur');
     const flipCheckbox = document.getElementById('flip-avatar');
     const animSelect = document.getElementById('anim-style');
     const idleAnimSelect = document.getElementById('idle-anim-style');
@@ -321,7 +310,19 @@
     let isBlinking = false;
     let audioContext, analyser;
     
-    // --- LOAD SAVED DATA ---
+    function hexToRgba(hex, opacity) {
+      let c = hex.replace('#','');
+      if(c.length===3) c = c.split('').map(x => x+x).join('');
+      const num = parseInt(c,16);
+      return `rgba(${num>>16},${(num>>8)&255},${num&255},${opacity})`;
+    }
+
+    function updateShadowStyle() {
+      const color = shadowColorInput.value;
+      const blur = shadowBlurSlider.value;
+      document.documentElement.style.setProperty('--avatar-shadow', `0px 15px ${blur}px ${hexToRgba(color, 0.6)}`);
+    }
+
     function loadSavedData() {
       updateAvatarImage();
       
@@ -329,10 +330,18 @@
         bgInput.value = localStorage.getItem('png_bgColor');
         document.body.style.backgroundColor = bgInput.value;
       }
+      if (localStorage.getItem('png_bgOpacity')) {
+        bgOpacitySlider.value = localStorage.getItem('png_bgOpacity');
+        document.body.style.opacity = bgOpacitySlider.value / 100;
+      }
       if (localStorage.getItem('png_bgImage')) document.body.style.backgroundImage = `url(${localStorage.getItem('png_bgImage')})`;
       if (localStorage.getItem('png_sensitivity')) sensitivitySlider.value = localStorage.getItem('png_sensitivity');
       if (localStorage.getItem('png_boost')) boostSlider.value = localStorage.getItem('png_boost');
       
+      if (localStorage.getItem('png_shadowColor')) shadowColorInput.value = localStorage.getItem('png_shadowColor');
+      if (localStorage.getItem('png_shadowBlur')) shadowBlurSlider.value = localStorage.getItem('png_shadowBlur');
+      updateShadowStyle();
+
       if (localStorage.getItem('png_animStyle')) animSelect.value = localStorage.getItem('png_animStyle');
       if (localStorage.getItem('png_idleAnimStyle')) idleAnimSelect.value = localStorage.getItem('png_idleAnimStyle');
       
@@ -355,7 +364,6 @@
       }
     }
 
-    // --- UPLOADS ---
     function handleUploadWithSave(inputId, storageKey, callback) {
       document.getElementById(inputId).addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -382,7 +390,6 @@
     handleUploadWithSave('img-talk-blink', 'png_talkBlink', (url) => { srcTalkBlink = url; updateAvatarImage(); });
     handleUploadWithSave('bg-image', 'png_bgImage', (url) => { document.body.style.backgroundImage = `url(${url})`; });
 
-    // --- UI EVENT LISTENERS ---
     bgInput.addEventListener('input', (e) => {
       document.body.style.backgroundImage = 'none';
       localStorage.removeItem('png_bgImage');
@@ -390,9 +397,24 @@
       localStorage.setItem('png_bgColor', e.target.value);
     });
 
+    bgOpacitySlider.addEventListener('input', (e) => {
+      document.body.style.opacity = e.target.value / 100;
+      localStorage.setItem('png_bgOpacity', e.target.value);
+    });
+
     sensitivitySlider.addEventListener('input', (e) => localStorage.setItem('png_sensitivity', e.target.value));
     boostSlider.addEventListener('input', (e) => localStorage.setItem('png_boost', e.target.value));
     
+    shadowColorInput.addEventListener('input', (e) => {
+      localStorage.setItem('png_shadowColor', e.target.value);
+      updateShadowStyle();
+    });
+
+    shadowBlurSlider.addEventListener('input', (e) => {
+      localStorage.setItem('png_shadowBlur', e.target.value);
+      updateShadowStyle();
+    });
+
     sizeSlider.addEventListener('input', (e) => {
       avatar.style.height = e.target.value + 'vh';
       localStorage.setItem('png_avatarSize', e.target.value);
@@ -418,7 +440,6 @@
       if (confirm("Reset everything?")) { localStorage.clear(); location.reload(); }
     });
 
-    // --- DRAG LOGIC ---
     let isDragging = false;
     let currentX = 0, currentY = 0, initialX = 0, initialY = 0, xOffset = 0, yOffset = 0;
 
@@ -444,7 +465,6 @@
       }
     }
 
-    // --- AVATAR STATE CONTROLLER ---
     function updateAvatarImage() {
       avatar.className = '';
       const talkAnim = animSelect.value;
@@ -470,7 +490,6 @@
     }
     setTimeout(blinkLoop, 2000);
 
-    // --- MICROPHONE LOGIC ---
     startBtn.addEventListener('click', async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -500,7 +519,6 @@
       let sum = 0;
       for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
       
-      // Apply Mic Boost (Value goes from 10 to 50, which translates to 1.0x to 5.0x boost)
       const boostMultiplier = boostSlider.value / 10;
       let average = (sum / dataArray.length) * boostMultiplier;
       
