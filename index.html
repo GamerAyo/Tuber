@@ -2,134 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Advanced Custom PNGTuber</title>
+  <title>Ultimate PNGTuber App</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #00ff00; /* Green screen */
+      background-color: #00ff00; /* Default Green Screen */
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       overflow: hidden;
     }
+
+    /* Sleek UI Panel */
     #ui-panel {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 20px;
-      border-radius: 10px;
+      background: rgba(30, 30, 35, 0.95);
+      color: white;
+      padding: 25px;
+      border-radius: 12px;
       position: absolute;
       top: 20px;
       left: 20px;
       z-index: 10;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      max-width: 300px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      width: 320px;
       max-height: 90vh;
       overflow-y: auto;
+      border: 1px solid #444;
     }
-    #avatar-container {
-      position: relative;
+
+    h3 {
+      margin-top: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid #555;
+      padding-bottom: 10px;
     }
-    #avatar {
-      max-height: 80vh;
-      max-width: 80vw;
-      object-fit: contain;
-      transition: transform 0.05s;
+
+    .section-title {
+      font-size: 12px;
+      color: #aaa;
+      text-transform: uppercase;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      letter-spacing: 0.5px;
     }
-    /* The bounce effect when talking */
-    .talking {
-      transform: scale(1.05) translateY(-10px); 
-    }
+
     label {
       display: block;
-      margin-top: 15px;
-      font-size: 14px;
+      margin-top: 10px;
+      font-size: 13px;
       font-weight: bold;
-      color: #333;
+      color: #eee;
     }
-    input[type="file"] {
+
+    input[type="file"], input[type="color"], input[type="range"] {
+      width: 100%;
       margin-top: 5px;
-      font-size: 12px;
+      box-sizing: border-box;
     }
+
+    input[type="file"] {
+      font-size: 11px;
+      color: #ccc;
+    }
+
+    /* Live Audio Meter */
+    #meter-container {
+      width: 100%;
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    
+    #audio-meter {
+      height: 100%;
+      width: 0%;
+      background: #28a745;
+      transition: width 0.05s ease;
+    }
+
+    button {
+      background-color: #5865F2; /* Discord Blurple */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 14px;
+      margin-top: 15px;
+      padding: 12px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #4752c4;
+    }
+
+    #hide-ui-btn {
+      background-color: #444;
+    }
+    
+    #hide-ui-btn:hover {
+      background-color: #555;
+    }
+
     .hidden {
       display: none !important;
     }
-    button {
-      background-color: #333;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      margin-top: 15px;
-      padding: 10px;
-      cursor: pointer;
-      width: 100%;
+
+    /* Avatar Settings */
+    #avatar-container {
+      position: relative;
     }
-    hr {
-      margin-top: 15px;
-      border: 0;
-      border-top: 1px solid #ccc;
+
+    #avatar {
+      max-height: 85vh;
+      max-width: 85vw;
+      object-fit: contain;
+      transition: transform 0.05s ease-out;
+      filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.3)); /* Nice shadow on the avatar */
+    }
+
+    .talking {
+      transform: scale(1.04) translateY(-8px); 
     }
   </style>
 </head>
 <body>
 
   <div id="ui-panel">
-    <h3 style="margin-top:0;">PNGTuber Setup</h3>
+    <h3>PNGTuber Pro</h3>
     
-    <label>1. Closed Mouth, Open Eyes (Idle)</label>
-    <input type="file" id="img-idle" accept="image/png, image/jpeg, image/gif">
+    <div class="section-title">1. Avatar Images</div>
+    <label>Idle (Closed Mouth, Open Eyes)</label>
+    <input type="file" id="img-idle" accept="image/*">
     
-    <label>2. Closed Mouth, Closed Eyes (Blink)</label>
-    <input type="file" id="img-blink" accept="image/png, image/jpeg, image/gif">
+    <label>Blink (Closed Mouth, Closed Eyes)</label>
+    <input type="file" id="img-blink" accept="image/*">
     
-    <label>3. Open Mouth, Open Eyes (Talk)</label>
-    <input type="file" id="img-talk" accept="image/png, image/jpeg, image/gif">
+    <label>Talk (Open Mouth, Open Eyes)</label>
+    <input type="file" id="img-talk" accept="image/*">
     
-    <label>4. Open Mouth, Closed Eyes (Talk + Blink)</label>
-    <input type="file" id="img-talk-blink" accept="image/png, image/jpeg, image/gif">
+    <label>Talk + Blink</label>
+    <input type="file" id="img-talk-blink" accept="image/*">
     
-    <hr>
-
-    <label>Background Color:</label>
+    <div class="section-title">2. Environment</div>
+    <label>Background Color (Green Screen)</label>
     <input type="color" id="bg-color" value="#00ff00">
     
-    <label>Mic Sensitivity:</label>
-    <input type="range" id="sensitivity" min="1" max="100" value="10">
+    <label>OR Upload Background Image</label>
+    <input type="file" id="bg-image" accept="image/*">
+
+    <div class="section-title">3. Microphone Settings</div>
+    <label>Sensitivity Threshold:</label>
+    <input type="range" id="sensitivity" min="1" max="100" value="15">
     
-    <button id="start-btn">Start Microphone</button>
-    <button id="hide-ui-btn">Hide Setup Menu</button>
-    <p style="font-size: 12px; color: #666; margin-bottom: 0;">Refresh page to bring menu back.</p>
+    <label>Live Mic Level:</label>
+    <div id="meter-container">
+      <div id="audio-meter"></div>
+    </div>
+    
+    <button id="start-btn">Connect Microphone</button>
+    <button id="hide-ui-btn">Hide Menu (OBS Mode)</button>
+    <p style="font-size: 11px; color: #888; text-align: center; margin-bottom: 0;">Refresh page to bring menu back.</p>
   </div>
 
   <div id="avatar-container">
-    <img id="avatar" src="" alt="Upload your 4 images in the top left!">
+    <img id="avatar" src="" alt="Upload your avatar images in the top left menu!">
   </div>
 
   <script>
     const uiPanel = document.getElementById('ui-panel');
+    const avatar = document.getElementById('avatar');
     const bgInput = document.getElementById('bg-color');
+    const bgImageInput = document.getElementById('bg-image');
+    
     const sensitivitySlider = document.getElementById('sensitivity');
     const startBtn = document.getElementById('start-btn');
     const hideUiBtn = document.getElementById('hide-ui-btn');
-    const avatar = document.getElementById('avatar');
+    const audioMeter = document.getElementById('audio-meter');
 
-    // Image variables
     let srcIdle = '';
     let srcBlink = '';
     let srcTalk = '';
     let srcTalkBlink = '';
-
-    // State variables
     let isTalking = false;
     let isBlinking = false;
     
     let audioContext;
     let analyser;
 
-    // Helper to load image inputs
+    // File Upload Handler
     function handleUpload(inputId, callback) {
       document.getElementById(inputId).addEventListener('change', (e) => {
         if(e.target.files[0]) {
@@ -143,80 +216,66 @@
     handleUpload('img-blink', (url) => { srcBlink = url; updateAvatarImage(); });
     handleUpload('img-talk', (url) => { srcTalk = url; updateAvatarImage(); });
     handleUpload('img-talk-blink', (url) => { srcTalkBlink = url; updateAvatarImage(); });
+    
+    handleUpload('bg-image', (url) => { document.body.style.backgroundImage = `url(${url})`; });
 
-    // Core function to decide which image to show
+    bgInput.addEventListener('input', (e) => {
+      document.body.style.backgroundImage = 'none'; // Remove image if color is picked
+      document.body.style.backgroundColor = e.target.value;
+    });
+
+    hideUiBtn.addEventListener('click', () => uiPanel.classList.add('hidden'));
+
+    // Avatar Logic
     function updateAvatarImage() {
-      // Prioritize the correct state, fallback to idle if an image is missing
       if (isTalking) {
-        if (isBlinking && srcTalkBlink) {
-          avatar.src = srcTalkBlink;
-        } else if (srcTalk) {
-          avatar.src = srcTalk;
-        } else {
-          avatar.src = srcIdle; 
-        }
+        avatar.src = (isBlinking && srcTalkBlink) ? srcTalkBlink : (srcTalk || srcIdle);
         avatar.classList.add('talking');
       } else {
-        if (isBlinking && srcBlink) {
-          avatar.src = srcBlink;
-        } else {
-          avatar.src = srcIdle;
-        }
+        avatar.src = (isBlinking && srcBlink) ? srcBlink : srcIdle;
         avatar.classList.remove('talking');
       }
     }
 
-    // Random Blinking Logic
+    // Random Blinking
     function blinkLoop() {
       isBlinking = true;
       updateAvatarImage();
-      
-      // Keep eyes closed for 150 milliseconds
       setTimeout(() => {
         isBlinking = false;
         updateAvatarImage();
-        
-        // Wait between 2 to 5 seconds before the next blink
-        const timeUntilNextBlink = Math.random() * 3000 + 2000;
-        setTimeout(blinkLoop, timeUntilNextBlink);
+        setTimeout(blinkLoop, Math.random() * 3000 + 2000);
       }, 150);
     }
-    
-    // Start the blinking timer right away
     setTimeout(blinkLoop, 2000);
 
-    // Background and UI controls
-    bgInput.addEventListener('input', (e) => {
-      document.body.style.backgroundColor = e.target.value;
-    });
-
-    hideUiBtn.addEventListener('click', () => {
-      uiPanel.classList.add('hidden');
-    });
-
-    // Microphone setup
+    // Microphone Logic
     startBtn.addEventListener('click', async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Force AudioContext to wake up (fixes bug where browser ignores mic)
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
         analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
-        
         const microphone = audioContext.createMediaStreamSource(stream);
         microphone.connect(analyser);
         
-        startBtn.textContent = "Mic is Active";
-        startBtn.disabled = true;
+        startBtn.textContent = "Microphone Connected";
         startBtn.style.backgroundColor = "#28a745";
+        startBtn.disabled = true;
         
         checkAudioLevel();
       } catch (err) {
-        alert('Microphone access denied. Please allow mic permissions in your browser/OBS.');
+        alert('Could not access microphone! Make sure permissions are allowed.');
         console.error(err);
       }
     });
 
-    // Audio level loop
     function checkAudioLevel() {
       if (!analyser) return;
       
@@ -224,16 +283,17 @@
       analyser.getByteFrequencyData(dataArray);
       
       let sum = 0;
-      for (let i = 0; i < dataArray.length; i++) {
-        sum += dataArray[i];
-      }
+      for (let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
       let average = sum / dataArray.length;
       
-      // Threshold for when the mic picks up talking
-      const threshold = 100 - sensitivitySlider.value; 
+      // Update visual meter (cap it at 100%)
+      const meterWidth = Math.min(average * 2, 100); 
+      audioMeter.style.width = meterWidth + '%';
+      
+      // Check if loud enough to trigger talking
+      const threshold = sensitivitySlider.value;
       const currentlyTalking = average > threshold;
       
-      // Only update if the state actually changes (prevents flickering)
       if (currentlyTalking !== isTalking) {
         isTalking = currentlyTalking;
         updateAvatarImage();
