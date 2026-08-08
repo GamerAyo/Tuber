@@ -171,7 +171,7 @@
       transition: height 0.1s;
     }
 
-    /* --- ANIMATIONS --- */
+    /* --- EXPANDED TALKING ANIMATIONS --- */
     @keyframes shake {
       0% { transform: translate(1px, 1px) rotate(0deg); }
       25% { transform: translate(-2px, -3px) rotate(-1.5deg); }
@@ -195,16 +195,78 @@
 
     @keyframes tilt {
       0%, 100% { transform: rotate(0deg); }
-      50% { transform: rotate(5deg) scale(1.02); }
+      50% { transform: rotate(6deg) scale(1.02); }
     }
     .anim-tilt { animation: tilt 0.3s infinite ease-in-out; }
 
-    @keyframes float {
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg); }
+      50% { transform: rotate(3deg); }
+    }
+    .anim-wiggle { animation: wiggle 0.12s infinite ease-in-out; }
+
+    @keyframes stretch {
+      0%, 100% { transform: scaleY(1) scaleX(1); }
+      50% { transform: scaleY(1.1) scaleX(0.95) translateY(-5px); }
+    }
+    .anim-stretch { animation: stretch 0.25s infinite ease-in-out; }
+
+    @keyframes spinDrift {
+      0% { transform: rotate(0deg) translateY(0); }
+      25% { transform: rotate(-2deg) translateY(-5px); }
+      75% { transform: rotate(2deg) translateY(5px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+    .anim-spin-drift { animation: spinDrift 0.4s infinite ease-in-out; }
+
+    @keyframes earthquake {
+      0% { transform: translate(2px, 2px); }
+      20% { transform: translate(-3px, 1px); }
+      40% { transform: translate(-1px, -3px); }
+      60% { transform: translate(3px, -1px); }
+      80% { transform: translate(-2px, 3px); }
+      100% { transform: translate(2px, 2px); }
+    }
+    .anim-earthquake { animation: earthquake 0.08s infinite; }
+
+    /* --- EXPANDED IDLE ANIMATIONS --- */
+    @keyframes floatAnim {
       0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-10px); }
     }
-    .anim-idle-float { animation: float 3s infinite ease-in-out; }
-    
+    .anim-idle-float { animation: floatAnim 3s infinite ease-in-out; }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02) translateY(-2px); }
+    }
+    .anim-idle-breathe { animation: breathe 4s infinite ease-in-out; }
+
+    @keyframes headNod {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      30% { transform: translateY(4px) rotate(1deg); }
+      70% { transform: translateY(-2px) rotate(-1deg); }
+    }
+    .anim-idle-nod { animation: headNod 2.5s infinite ease-in-out; }
+
+    @keyframes slowSway {
+      0%, 100% { transform: rotate(-1.5deg); }
+      50% { transform: rotate(1.5deg); }
+    }
+    .anim-idle-sway { animation: slowSway 5s infinite ease-in-out; }
+
+    @keyframes tenseRelax {
+      0%, 90%, 100% { transform: scale(1); }
+      95% { transform: scale(1.03, 0.98); }
+    }
+    .anim-idle-tense { animation: tenseRelax 6s infinite ease-in-out; }
+
+    @keyframes shimmerFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-6px) scale(1.01); }
+    }
+    .anim-idle-shimmer { animation: shimmerFloat 2s infinite ease-in-out; }
+
     .anim-none { animation: none; }
   </style>
 </head>
@@ -230,11 +292,20 @@
       <option value="anim-bounce">Smooth Bounce</option>
       <option value="anim-pulse">Pulse / Expand</option>
       <option value="anim-tilt">Side Tilt</option>
+      <option value="anim-wiggle">Quick Wiggle</option>
+      <option value="anim-stretch">Rubber Band Stretch</option>
+      <option value="anim-spin-drift">Spin Drift</option>
+      <option value="anim-earthquake">Earthquake</option>
     </select>
     
     <label>Idle Floating:</label>
     <select id="idle-anim-style">
       <option value="anim-idle-float">Float Gently</option>
+      <option value="anim-idle-breathe">Breathing / Scale</option>
+      <option value="anim-idle-nod">Gentle Head Nod</option>
+      <option value="anim-idle-sway">Slow Sway</option>
+      <option value="anim-idle-tense">Tense & Relax</option>
+      <option value="anim-idle-shimmer">Shimmer Float</option>
       <option value="anim-none">None (Stand Still)</option>
     </select>
 
