@@ -2,12 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Ultimate PNGTuber App</title>
+  <title>Ultimate PNGTuber Pro</title>
   <style>
+    :root {
+      --accent: #7289DA;
+      --accent-hover: #5b6eae;
+      --bg-dark: rgba(20, 20, 25, 0.85);
+    }
+    
     body {
       margin: 0;
       padding: 0;
-      background-color: #00ff00; /* Default Green Screen */
+      background-color: #00ff00; /* Green screen default */
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -20,93 +26,423 @@
       overflow: hidden;
     }
 
-    /* Sleek UI Panel */
+    /* Premium Glassmorphism UI */
     #ui-panel {
-      background: rgba(30, 30, 35, 0.95);
-      color: white;
+      background: var(--bg-dark);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: #fff;
       padding: 25px;
-      border-radius: 12px;
+      border-radius: 16px;
       position: absolute;
       top: 20px;
       left: 20px;
       z-index: 10;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       width: 320px;
       max-height: 90vh;
       overflow-y: auto;
-      border: 1px solid #444;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: opacity 0.3s ease;
     }
+
+    /* Custom Scrollbar for UI */
+    #ui-panel::-webkit-scrollbar { width: 6px; }
+    #ui-panel::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+    #ui-panel::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
     h3 {
       margin-top: 0;
+      font-size: 22px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1px;
-      border-bottom: 2px solid #555;
-      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(255,255,255,0.1);
+      padding-bottom: 15px;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .section-title {
-      font-size: 12px;
-      color: #aaa;
+      font-size: 11px;
+      color: var(--accent);
       text-transform: uppercase;
-      margin-top: 20px;
-      margin-bottom: 5px;
-      letter-spacing: 0.5px;
+      margin-top: 25px;
+      margin-bottom: 10px;
+      font-weight: 800;
+      letter-spacing: 1px;
     }
 
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 13px;
-      font-weight: bold;
-      color: #eee;
-    }
-
-    input[type="file"], input[type="color"], input[type="range"] {
-      width: 100%;
-      margin-top: 5px;
-      box-sizing: border-box;
+      font-weight: 600;
+      color: #ddd;
     }
 
     input[type="file"] {
+      width: 100%;
+      margin-top: 5px;
       font-size: 11px;
-      color: #ccc;
+      color: #aaa;
+      background: rgba(0,0,0,0.2);
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      border: none;
+      border-radius: 6px;
+      background: none;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-top: 8px;
+      accent-color: var(--accent);
     }
 
     /* Live Audio Meter */
     #meter-container {
       width: 100%;
-      height: 10px;
-      background: #333;
-      border-radius: 5px;
-      margin-top: 5px;
+      height: 12px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 6px;
+      margin-top: 8px;
       overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
     }
     
     #audio-meter {
       height: 100%;
       width: 0%;
-      background: #28a745;
+      background: linear-gradient(90deg, #28a745, #00ff88);
       transition: width 0.05s ease;
     }
 
     button {
-      background-color: #5865F2; /* Discord Blurple */
+      background-color: var(--accent);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: bold;
       font-size: 14px;
       margin-top: 15px;
       padding: 12px;
       cursor: pointer;
       width: 100%;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
     button:hover {
-      background-color: #4752c4;
+      background-color: var(--accent-hover);
+      transform: translateY(-2px);
     }
 
-    #hide-ui-btn {
-      background-color:
+    #hide-ui-btn { background-color: #444; }
+    #hide-ui-btn:hover { background-color: #555; }
+    
+    #clear-data-btn {
+      background-color: transparent;
+      border: 1px solid #ff4444;
+      color: #ff4444;
+      margin-top: 25px;
+    }
+    #clear-data-btn:hover { background-color: #ff4444; color: #fff; }
+
+    .hidden { opacity: 0; pointer-events: none; }
+
+    /* Avatar Settings & Dragging */
+    #avatar-container {
+      position: absolute;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #avatar-container:active { cursor: grabbing; }
+
+    #avatar {
+      max-height: 85vh;
+      max-width: 85vw;
+      object-fit: contain;
+      filter: drop-shadow(0px 15px 25px rgba(0,0,0,0.4));
+      pointer-events: none; /* Prevents dragging the image ghost */
+    }
+
+    /* Advanced Shaking Animation */
+    @keyframes shake {
+      0% { transform: scale(1.04) translate(1px, 1px) rotate(0deg); }
+      25% { transform: scale(1.04) translate(-2px, -3px) rotate(-1.5deg); }
+      50% { transform: scale(1.04) translate(-2px, 0px) rotate(1.5deg); }
+      75% { transform: scale(1.04) translate(3px, 2px) rotate(0deg); }
+      100% { transform: scale(1.04) translate(1px, -1px) rotate(-1.5deg); }
+    }
+
+    .talking { animation: shake 0.15s infinite; }
+  </style>
+</head>
+<body>
+
+  <div id="ui-panel">
+    <h3>PNGTuber Pro</h3>
+    
+    <div class="section-title">1. Avatar Uploads (Auto-Saves)</div>
+    <label>Idle (Closed Mouth, Open Eyes)</label>
+    <input type="file" id="img-idle" accept="image/*">
+    
+    <label>Blink (Closed Mouth, Closed Eyes)</label>
+    <input type="file" id="img-blink" accept="image/*">
+    
+    <label>Talk (Open Mouth, Open Eyes)</label>
+    <input type="file" id="img-talk" accept="image/*">
+    
+    <label>Talk + Blink</label>
+    <input type="file" id="img-talk-blink" accept="image/*">
+    
+    <div class="section-title">2. Environment</div>
+    <label>Background Color (Green Screen)</label>
+    <input type="color" id="bg-color" value="#00ff00">
+    
+    <label>OR Background Image</label>
+    <input type="file" id="bg-image" accept="image/*">
+
+    <div class="section-title">3. Microphone Settings</div>
+    <label>Sensitivity Threshold:</label>
+    <input type="range" id="sensitivity" min="1" max="100" value="15">
+    
+    <label>Live Mic Level:</label>
+    <div id="meter-container">
+      <div id="audio-meter"></div>
+    </div>
+    
+    <button id="start-btn">Connect Microphone</button>
+    <button id="hide-ui-btn">Hide Menu (OBS Mode)</button>
+    <p style="font-size: 11px; color: #888; text-align: center; margin-bottom: 0;">Refresh page to bring menu back.</p>
+    
+    <button id="clear-data-btn">Reset All Saved Data</button>
+  </div>
+
+  <div id="avatar-container">
+    <img id="avatar" src="" alt="Upload your avatar in the menu!">
+  </div>
+
+  <script>
+    const uiPanel = document.getElementById('ui-panel');
+    const avatar = document.getElementById('avatar');
+    const avatarContainer = document.getElementById('avatar-container');
+    const bgInput = document.getElementById('bg-color');
+    const bgImageInput = document.getElementById('bg-image');
+    const sensitivitySlider = document.getElementById('sensitivity');
+    const startBtn = document.getElementById('start-btn');
+    const hideUiBtn = document.getElementById('hide-ui-btn');
+    const clearBtn = document.getElementById('clear-data-btn');
+    const audioMeter = document.getElementById('audio-meter');
+
+    let srcIdle = localStorage.getItem('png_idle') || '';
+    let srcBlink = localStorage.getItem('png_blink') || '';
+    let srcTalk = localStorage.getItem('png_talk') || '';
+    let srcTalkBlink = localStorage.getItem('png_talkBlink') || '';
+    
+    let isTalking = false;
+    let isBlinking = false;
+    let audioContext, analyser;
+
+    // Load Initial Saved Settings
+    function loadSavedData() {
+      // Load Images
+      updateAvatarImage();
+      
+      // Load Background
+      const savedBgColor = localStorage.getItem('png_bgColor');
+      if (savedBgColor) {
+        bgInput.value = savedBgColor;
+        document.body.style.backgroundColor = savedBgColor;
+      }
+      const savedBgImage = localStorage.getItem('png_bgImage');
+      if (savedBgImage) document.body.style.backgroundImage = `url(${savedBgImage})`;
+
+      // Load Sensitivity
+      const savedSens = localStorage.getItem('png_sensitivity');
+      if (savedSens) sensitivitySlider.value = savedSens;
+
+      // Load Position
+      const savedX = localStorage.getItem('png_xOffset');
+      const savedY = localStorage.getItem('png_yOffset');
+      if (savedX && savedY) {
+        xOffset = parseFloat(savedX);
+        yOffset = parseFloat(savedY);
+        avatarContainer.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+      }
+    }
+
+    // Advanced Upload with Base64 Save
+    function handleUploadWithSave(inputId, storageKey, callback) {
+      document.getElementById(inputId).addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const base64 = event.target.result;
+            try {
+              localStorage.setItem(storageKey, base64);
+              callback(base64);
+            } catch (err) {
+              alert("Image file is too large to save permanently in browser memory! It will work for this session, but you may need to re-upload on refresh. Try using a smaller PNG file.");
+              callback(base64);
+            }
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    handleUploadWithSave('img-idle', 'png_idle', (url) => { srcIdle = url; updateAvatarImage(); });
+    handleUploadWithSave('img-blink', 'png_blink', (url) => { srcBlink = url; updateAvatarImage(); });
+    handleUploadWithSave('img-talk', 'png_talk', (url) => { srcTalk = url; updateAvatarImage(); });
+    handleUploadWithSave('img-talk-blink', 'png_talkBlink', (url) => { srcTalkBlink = url; updateAvatarImage(); });
+    
+    handleUploadWithSave('bg-image', 'png_bgImage', (url) => { document.body.style.backgroundImage = `url(${url})`; });
+
+    // Background & Sensitivity Saves
+    bgInput.addEventListener('input', (e) => {
+      document.body.style.backgroundImage = 'none';
+      localStorage.removeItem('png_bgImage');
+      document.body.style.backgroundColor = e.target.value;
+      localStorage.setItem('png_bgColor', e.target.value);
+    });
+
+    sensitivitySlider.addEventListener('input', (e) => {
+      localStorage.setItem('png_sensitivity', e.target.value);
+    });
+
+    // Clear Data
+    clearBtn.addEventListener('click', () => {
+      if (confirm("Are you sure you want to delete all saved images and settings?")) {
+        localStorage.clear();
+        location.reload();
+      }
+    });
+
+    hideUiBtn.addEventListener('click', () => uiPanel.classList.add('hidden'));
+
+    // --- DRAG AND DROP (WITH POSITION SAVING) ---
+    let isDragging = false;
+    let currentX = 0, currentY = 0, initialX = 0, initialY = 0, xOffset = 0, yOffset = 0;
+
+    avatarContainer.addEventListener("mousedown", dragStart);
+    document.addEventListener("mouseup", dragEnd);
+    document.addEventListener("mousemove", drag);
+
+    function dragStart(e) {
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+      if (e.target === avatarContainer || e.target === avatar) isDragging = true;
+    }
+
+    function dragEnd() {
+      initialX = currentX;
+      initialY = currentY;
+      isDragging = false;
+      // Save position to memory when mouse is released
+      localStorage.setItem('png_xOffset', xOffset);
+      localStorage.setItem('png_yOffset', yOffset);
+    }
+
+    function drag(e) {
+      if (isDragging) {
+        e.preventDefault();
+        currentX = e.clientX - initialX;
+        currentY = e.clientY - initialY;
+        xOffset = currentX;
+        yOffset = currentY;
+        avatarContainer.style.transform = `translate(${currentX}px, ${currentY}px)`;
+      }
+    }
+
+    // --- AVATAR & BLINK LOGIC ---
+    function updateAvatarImage() {
+      if (isTalking) {
+        avatar.src = (isBlinking && srcTalkBlink) ? srcTalkBlink : (srcTalk || srcIdle);
+        avatar.classList.add('talking');
+      } else {
+        avatar.src = (isBlinking && srcBlink) ? srcBlink : srcIdle;
+        avatar.classList.remove('talking');
+      }
+    }
+
+    function blinkLoop() {
+      isBlinking = true;
+      updateAvatarImage();
+      setTimeout(() => {
+        isBlinking = false;
+        updateAvatarImage();
+        setTimeout(blinkLoop, Math.random() * 4000 + 1500); // Blinks randomly every 1.5s to 5.5s
+      }, 150);
+    }
+    setTimeout(blinkLoop, 2000);
+
+    // --- MICROPHONE LOGIC ---
+    startBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') await audioContext.resume();
+
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        const microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        
+        startBtn.textContent = "Microphone Connected";
+        startBtn.style.backgroundColor = "#28a745";
+        startBtn.disabled = true;
+        
+        checkAudioLevel();
+      } catch (err) {
+        alert('Could not access microphone! Make sure permissions are allowed.');
+        console.error(err);
+      }
+    });
+
+    function checkAudioLevel() {
+      if (!analyser) return;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(dataArray);
+      
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+      let average = sum / dataArray.length;
+      
+      const meterWidth = Math.min(average * 2, 100); 
+      audioMeter.style.width = meterWidth + '%';
+      
+      const threshold = sensitivitySlider.value;
+      const currentlyTalking = average > threshold;
+      
+      if (currentlyTalking !== isTalking) {
+        isTalking = currentlyTalking;
+        updateAvatarImage();
+      }
+      
+      requestAnimationFrame(checkAudioLevel);
+    }
+
+    // Initialize on page load
+    loadSavedData();
+  </script>
+</body>
+</html>
